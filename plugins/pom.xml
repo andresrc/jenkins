@@ -38,6 +38,8 @@
     <slf4jVersion>1.7.7</slf4jVersion>
     <node.version>4.0.0</node.version>
     <npm.version>2.13.1</npm.version>
+    <jenkins.bce.baseline>update:https://updates.jenkins-ci.org/update-center.json</jenkins.bce.baseline>
+    <jenkins.bce.dependencies>none</jenkins.bce.dependencies>
   </properties>
   <dependencyManagement>
     <!-- mark logging dependencies as provided by war -->
@@ -126,6 +128,11 @@
       <artifactId>slf4j-jdk14</artifactId>
       <version>${slf4jVersion}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.tools</groupId>
+      <artifactId>jenkins-bce-annotations</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
@@ -280,6 +287,23 @@
                 }              
               ]]></inlineScript>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>jenkins-bce-maven-plugin</artifactId>
+        <version>0.1-SNAPSHOT</version>
+        <configuration>
+          <baseline>${jenkins.bce.baseline}</baseline>
+          <dependencySpec>${jenkins.bce.dependencies}</dependencySpec>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
