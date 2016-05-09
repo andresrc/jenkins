@@ -26,6 +26,7 @@ package hudson;
 import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
 import com.thoughtworks.xstream.core.JVM;
 import com.trilead.ssh2.util.IOUtils;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.Hudson;
 import hudson.security.ACL;
 import hudson.util.BootFailure;
@@ -58,6 +59,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -223,7 +225,7 @@ public class WebAppMain implements ServletContextListener {
                 public void run() {
                     boolean success = false;
                     try {
-                        Jenkins instance = new Hudson(_home, context);
+                        Jenkins instance = new Hudson(_home, context, createPluginManager(context, _home));
 
                         // one last check to make sure everything is in order before we go live
                         if (Thread.interrupted())
@@ -259,6 +261,25 @@ public class WebAppMain implements ServletContextListener {
 
     public void joinInit() throws InterruptedException {
         initThread.join();
+    }
+
+    /**
+     * Creates the plugin manager to use, if customized.
+     * @return The plugin manager to use or {@code null} to use the default one.
+     */
+    private PluginManager createPluginManager(ServletContext context, File rootDir) {
+        final String pmClassName = context.getInitParameter(PluginManager.class.getName() + ".className");
+        if (pmClassName == null) {
+            return null;
+        }
+        try {
+            final Class<? extends PluginManager> klass = Class.forName(pmClassName).asSubclass(PluginManager.class);
+            final Constructor <? extends PluginManager> constructor = klass.getConstructor(ServletContext.class, File.class);
+            return constructor.newInstance(context, rootDir);
+        } catch(Exception e) {
+            LOGGER.log(WARNING, String.format("Unable to instantiate custom plugin manager %s. Using default.", pmClassName), e);
+            return null;
+        }
     }
 
     /**

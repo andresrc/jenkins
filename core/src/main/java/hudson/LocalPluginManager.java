@@ -26,6 +26,7 @@ package hudson;
 
 import jenkins.model.Jenkins;
 
+import javax.servlet.ServletContext;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,12 +38,16 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 public class LocalPluginManager extends PluginManager {
+    public LocalPluginManager(ServletContext context, File rootDir) {
+        super(context, new File(rootDir,"plugins"));
+    }
+
     public LocalPluginManager(Jenkins jenkins) {
-        super(jenkins.servletContext, new File(jenkins.getRootDir(),"plugins"));
+        this(jenkins.servletContext, jenkins.getRootDir());
     }
 
     public LocalPluginManager(File rootDir) {
-        super(null, new File(rootDir,"plugins"));
+        this(null, rootDir);
     }
 
     /**
